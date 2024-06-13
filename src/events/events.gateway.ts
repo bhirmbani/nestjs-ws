@@ -1,5 +1,4 @@
 import {
-  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -31,10 +30,5 @@ export class EventsGateway {
         return () => clearInterval(intervalId);
       },
     );
-  }
-
-  handleEvent(@MessageBody() data: string): string {
-    console.log('handleEvent', data);
-    return data;
   }
 }
