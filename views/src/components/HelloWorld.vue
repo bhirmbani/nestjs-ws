@@ -29,8 +29,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { io } from 'socket.io-client';
+import { ref, onMounted } from 'vue';
 
 const SystemMessage = {
   id: 1,
@@ -38,9 +37,7 @@ const SystemMessage = {
   author: 'Bot',
 };
 
-const socket = io('http://localhost:8081/', {
-  transports: ['websocket'],
-});
+const socket = new WebSocket('ws://localhost:8081');
 
 export default {
   props: {
@@ -54,35 +51,33 @@ export default {
     const messages = ref([SystemMessage]);
 
     onMounted(() => {
-      socket.connect();
-
-      socket.on('connect', () => {
-        console.log('Socket connected client');
-      });
-
-      socket.on('disconnect', () => {
-        console.log('Socket disconnected client');
-      });
-
-      socket.on('chat', (newMessage) => {
-        console.log('New message added', newMessage);
-        messages.value = [...messages.value, newMessage];
-      });
-    });
-
-    onBeforeUnmount(() => {
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('chat');
+      socket.onopen = () => {
+        console.log('Connected');
+        socket.send(
+          JSON.stringify({
+            event: 'init',
+            data: 'from browser',
+          }),
+        );
+      };
+      socket.onmessage = (event) => {
+        const parsed = JSON.parse(event.data);
+        messages.value = [...messages.value, parsed.data.message];
+      };
     });
 
     const handleSendMessage = (e) => {
       if (e.key !== 'Enter' || inputValue.value.trim().length === 0) return;
-
-      socket.emit('chat', {
-        author: props.currentUser,
-        body: inputValue.value.trim(),
-      });
+      socket.send(
+        JSON.stringify({
+          event: 'chat',
+          data: {
+            id: Math.random(),
+            author: props.currentUser,
+            body: inputValue.value,
+          },
+        }),
+      );
       inputValue.value = '';
     };
 
@@ -98,7 +93,6 @@ export default {
 <style>
 body {
   margin: 0;
-
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

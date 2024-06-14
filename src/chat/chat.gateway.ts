@@ -2,35 +2,28 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  WsResponse,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-
-import { AddMessageDto } from './dto/add-message.dto';
+import { Observable } from 'rxjs';
+import { Server } from 'ws';
 
 @WebSocketGateway(8081, { cors: true })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
   private logger = new Logger('ChatGateway');
 
   @SubscribeMessage('chat')
-  handleMessage(@MessageBody() payload: AddMessageDto): AddMessageDto {
-    this.logger.log(`Message received: ${payload.author} - ${payload.body}`);
-    this.server.emit('chat', payload);
-
-    return payload;
-  }
-
-  handleConnection(socket: Socket) {
-    this.logger.log(`Socket connected server: ${socket.id}`);
-  }
-
-  handleDisconnect(socket: Socket) {
-    this.logger.log(`Socket disconnected server: ${socket.id}`);
+  onEvent(client: any, data: any): Observable<WsResponse<{ message: string }>> {
+    console.log('dari client ->', data);
+    return new Observable<WsResponse<{ message: string }>>((observer) => {
+      observer.next({
+        event: 'chat',
+        data: { message: data },
+      });
+      observer.complete();
+    });
   }
 }
