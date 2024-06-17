@@ -1,0 +1,17 @@
+services:
+
+  app-backend:
+    build:
+      context: .
+      dockerfile: backend.dockerfile
+    ports:
+      - 8081:8081
+      - 3000:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:

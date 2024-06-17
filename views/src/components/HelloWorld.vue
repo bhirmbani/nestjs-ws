@@ -37,7 +37,7 @@ const SystemMessage = {
   author: 'Bot',
 };
 
-const socket = new WebSocket('ws://localhost:8081');
+const socket = new WebSocket('http://127.0.0.1:8081');
 
 export default {
   props: {
